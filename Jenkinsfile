@@ -16,27 +16,21 @@ pipeline {
       }
     }
 
-    stage('Test') {
+    stage('OWASP Dependency Check') {
       steps {
-        // Runs tests if present; won’t fail the build if there are none
-        sh 'npm test || echo "no tests found"'
-      }
-    }
-
-    stage('Build') {
-      steps {
-        // Build if your package.json has a "build" script
-        sh 'npm run build || true'
+        dependencyCheck additionalArguments: '''
+          --scan ./
+          --out ./dependency-check-report
+          --format ALL
+          --prettyPrint
+        ''', odcInstallation: 'OWASP-DepCheck-10'
       }
     }
   }
 
   post {
     always {
-      // Save common outputs if they exist (safe to leave as is)
-      archiveArtifacts artifacts: 'build/**,dist/**,coverage/**', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'dependency-check-report/**', allowEmptyArchive: true
     }
   }
 }
-
-
