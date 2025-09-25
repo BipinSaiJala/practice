@@ -1,9 +1,5 @@
-
 pipeline {
-  agent any
-  tools {
-    nodejs 'NodeJS 24.8.0'   // <-- exactly the tool name you configured
-  }
+  agent { docker { image 'node:18-alpine' } }
   stages {
     stage('Node Version') {
       steps {
