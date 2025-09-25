@@ -5,25 +5,38 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        // If your default branch is "main", keep as is. Change to "feature" if needed.
         git url: 'https://github.com/BipinSaiJala/practice.git', branch: 'feature'
+        stash name: 'src', includes: '**/*'
       }
     }
 
-    stage('Install') {
-      steps {
-        sh 'npm ci || npm install'
-      }
-    }
+    stage('Parallel') {
+      parallel {
+        stage('Install') {
+          steps {
+            deleteDir()
+            unstash 'src'
+            sh 'npm ci || npm install'
+          }
+        }
+        stage('OWASP Dependency Check') {
+          steps {
+            deleteDir()
+            unstash 'src'
+            dependencyCheck additionalArguments: '''
+              --scan ./
+              --out ./dependency-check-report
+              --format ALL
+              --prettyPrint
+            ''', odcInstallation: 'OWASP-DepCheck-10'
 
-    stage('OWASP Dependency Check') {
-      steps {
-        dependencyCheck additionalArguments: '''
-          --scan ./
-          --out ./dependency-check-report
-          --format ALL
-          --prettyPrint
-        ''', odcInstallation: 'OWASP-DepCheck-10'
+            dependencyCheckPublisher(
+              pattern: 'dependency-check-report/dependency-check-report.xml',
+              failedTotalCritical: 1,
+              unstableTotalHigh: 1
+            )
+          }
+        }
       }
     }
   }
