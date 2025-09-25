@@ -1,27 +1,26 @@
 pipeline {
-  agent any
-  tools {
-    nodejs 'NodeJS 24.8.0'   // <-- replace with the EXACT tool name you set
-  }
-  stages {
-    stage('Node Version') {
-      steps {
-        sh '''
-          node -v
-          npm -v
-        '''
-      }
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/BipinSaiJala/practice.git'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                sh 'npm test'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
     }
-    stage('Install deps') {
-      steps {
-        sh '''
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-        '''
-      }
-    }
-  }
 }
+
